@@ -6,13 +6,9 @@ GCNv2 is a high-throughput variant of the Geometric Correspondence Network for p
 ## Example
 Online running performance with ORB and GCNv2 features:
 
-ORB:
+GCNv2 tum:
 
-![](orb.gif)
-
-GCNv2:
-
-![](gcn.gif)
+![](tum.gif)
 
 ## Related Publications
 
