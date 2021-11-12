@@ -1,3 +1,0 @@
-/home/gleefe/GCNv2_SLAM/Thirdparty/DBoW2/build/CMakeFiles/rebuild_cache.dir
-/home/gleefe/GCNv2_SLAM/Thirdparty/DBoW2/build/CMakeFiles/DBoW2.dir
-/home/gleefe/GCNv2_SLAM/Thirdparty/DBoW2/build/CMakeFiles/edit_cache.dir
