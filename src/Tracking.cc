@@ -275,10 +275,25 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
             cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
     }
 
-    if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    if (getenv("NN_ONLY") != nullptr || getenv("FULL_RESOLUTION") == nullptr)
+    {
+        cv::resize(mImGray, mImGray, cv::Size(320, 240));
+        
+    }
+
+    
+
+    if (getenv("USE_ORB") == nullptr)
+    {
+        // GCN
+        mCurrentFrame = Frame(mImGray,timestamp,mpGCNextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+
+    }
     else
+    {
+        // Orb
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    }
 
     Track();
 

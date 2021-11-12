@@ -41,15 +41,15 @@ void LoadImages(const string &strFile, vector<string> &vstrImageFilenames,
                 vector<double> &vTimestamps);
 
 
-class ImageGrabber
-{
-public:
-    ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
+// class ImageGrabber
+// {
+// public:
+//     ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
 
-    void GrabImage(const sensor_msgs::ImageConstPtr& msg);
+//     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
-    ORB_SLAM2::System* mpSLAM;
-};
+//     ORB_SLAM2::System* mpSLAM;
+// };
 
 
 int main(int argc, char **argv)
@@ -72,9 +72,9 @@ int main(int argc, char **argv)
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
 
-    viewerAR.SetSLAM(&SLAM);
+    // viewerAR.SetSLAM(&SLAM);
 
-    ImageGrabber igb(&SLAM);
+    // ImageGrabber igb(&SLAM);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        thread tViewer = thread(&ORB_SLAM2::ViewerAR::Run,&viewerAR);
+        // thread tViewer = thread(&ORB_SLAM2::ViewerAR::Run,&viewerAR);
 
         // if(imRGB.empty())
         // {
@@ -226,33 +226,33 @@ void LoadImages(const string &strFile, vector<string> &vstrImageFilenames, vecto
 
 
 
-void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
-{
-    // Copy the ros image message to cv::Mat.
-    cv_bridge::CvImageConstPtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvShare(msg);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-    cv::Mat im = cv_ptr->image.clone();
-    cv::Mat imu;
-    cv::Mat Tcw = mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
-    int state = mpSLAM->GetTrackingState();
-    vector<ORB_SLAM2::MapPoint*> vMPs = mpSLAM->GetTrackedMapPoints();
-    vector<cv::KeyPoint> vKeys = mpSLAM->GetTrackedKeyPointsUn();
+// void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
+// {
+//     // Copy the ros image message to cv::Mat.
+//     cv_bridge::CvImageConstPtr cv_ptr;
+//     try
+//     {
+//         cv_ptr = cv_bridge::toCvShare(msg);
+//     }
+//     catch (cv_bridge::Exception& e)
+//     {
+//         ROS_ERROR("cv_bridge exception: %s", e.what());
+//         return;
+//     }
+//     cv::Mat im = cv_ptr->image.clone();
+//     cv::Mat imu;
+//     cv::Mat Tcw = mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+//     int state = mpSLAM->GetTrackingState();
+//     vector<ORB_SLAM2::MapPoint*> vMPs = mpSLAM->GetTrackedMapPoints();
+//     vector<cv::KeyPoint> vKeys = mpSLAM->GetTrackedKeyPointsUn();
 
-    cv::undistort(im,imu,K,DistCoef);
+//     cv::undistort(im,imu,K,DistCoef);
 
-    if(bRGB)
-        viewerAR.SetImagePose(imu,Tcw,state,vKeys,vMPs);
-    else
-    {
-        cv::cvtColor(imu,imu,CV_RGB2BGR);
-        viewerAR.SetImagePose(imu,Tcw,state,vKeys,vMPs);
-    }    
-}
+//     if(bRGB)
+//         viewerAR.SetImagePose(imu,Tcw,state,vKeys,vMPs);
+//     else
+//     {
+//         cv::cvtColor(imu,imu,CV_RGB2BGR);
+//         viewerAR.SetImagePose(imu,Tcw,state,vKeys,vMPs);
+//     }    
+// }

@@ -6,6 +6,9 @@ FULL_RESOLUTION=1 GCN_PATH=gcn2_640x480.pt ./rgbd_gcn ../Vocabulary/GCNvoc.bin T
 
 FULL_RESOLUTION=1 GCN_PATH=gcn2_640x480.pt ./rgbd_gcn ../Vocabulary/GCNvoc.bin TUM3.yaml /home/gleefe/Downloads/rgbd_dataset_freiburg3_long_office_household associations/fr3_office.txt
 
+FULL_RESOLUTION=1 GCN_PATH=gcn2_640x480.pt ./rgbd_gcn_ar ../Vocabulary/GCNvoc.bin TUM3.yaml /home/gleefe/Downloads/rgbd_dataset_freiburg3_long_office_household
+
+
 # Reproduce results in comparison with ORB as in our paper, will enable NN_ONLY and use 320x240 resolution.
 
 # GCNv2

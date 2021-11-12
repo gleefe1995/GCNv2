@@ -68,6 +68,6 @@ Viewer.ViewpointY: -0.7
 #--------------------------------------------------------------------------------------------
 # Map Parapeters
 #--------------------------------------------------------------------------------------------
-Map.mapfile: map.bin
+Map.mapfile: /home/gleefe/Desktop/map.bin
 Viewer.ViewpointZ: -1.8
 Viewer.ViewpointF: 500
