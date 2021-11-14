@@ -24,7 +24,7 @@ We use the new thread and chrono functionalities of C++11.
 We use [Pytorch](https://github.com/pytorch/pytorch) C++ api(libtorch) for deloying the GCNv2. 
 The libtorch can be built as follows:
 ```
-git clone --recursive -b v1.0.1 https://github.com/pytorch/pytorch
+git clone --recursive -b v1.5.1 https://github.com/pytorch/pytorch
 cd pytorch && mkdir build && cd build
 python ../tools/build_libtorch.py
 ```
