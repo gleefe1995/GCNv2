@@ -77,7 +77,7 @@ void ViewerAR::Run()
     }
 
     wui=200;
-
+    // cout<<"CreateWidnow"<<endl;
     pangolin::CreateWindowAndBind("Viewer",w+wui,h);
 
     glEnable(GL_DEPTH_TEST);
@@ -169,7 +169,7 @@ void ViewerAR::Run()
             }
             if(menu_detectplane)
             {
-                Plane* pPlane = DetectPlane(Tcw,vMPs,50);
+                Plane* pPlane = ORB_SLAM2::ViewerAR::DetectPlane(Tcw,vMPs,50);
                 if(pPlane)
                 {
                     cout << "New virtual cube inserted!" << endl;

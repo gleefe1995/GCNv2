@@ -81,11 +81,6 @@ public:
     void GetImagePose(cv::Mat &im, cv::Mat &Tcw, int &status,
                       std::vector<cv::KeyPoint> &vKeys,  std::vector<MapPoint*> &vMPs);
 
-private:
-
-    //SLAM
-    ORB_SLAM2::System* mpSystem;
-
     void PrintStatus(const int &status, const bool &bLocMode, cv::Mat &im);
     void AddTextToImage(const std::string &s, cv::Mat &im, const int r=0, const int g=0, const int b=0);
     void LoadCameraPose(const cv::Mat &Tcw);
@@ -97,6 +92,17 @@ private:
 
     Plane* DetectPlane(const cv::Mat Tcw, const std::vector<MapPoint*> &vMPs, const int iterations=50);
 
+    std::vector<cv::KeyPoint> mvKeys;
+    std::vector<MapPoint*> mvMPs;
+
+
+private:
+
+    //SLAM
+    ORB_SLAM2::System* mpSystem;
+
+    
+
     // frame rate
     float mFPS, mT;
     float fx,fy,cx,cy;
@@ -106,8 +112,7 @@ private:
     cv::Mat mTcw;
     cv::Mat mImage;
     int mStatus;
-    std::vector<cv::KeyPoint> mvKeys;
-    std::vector<MapPoint*> mvMPs;
+    
 
 };
 
