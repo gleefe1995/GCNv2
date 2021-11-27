@@ -30,6 +30,9 @@
 #include <System.h>
 
 #include "ViewerAR.h"
+
+#include "pointcloud_2_depth.h"
+
 using namespace std;
 
 ORB_SLAM2::ViewerAR viewerAR;
@@ -59,6 +62,7 @@ int main(int argc, char **argv)
         cerr << endl << "Usage: ./rgbd_gcn path_to_vocabulary path_to_settings path_to_sequence path_to_association" << endl;
         return 1;
     }
+    
 
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
@@ -112,7 +116,21 @@ int main(int argc, char **argv)
         DistCoef.at<float>(4) = k3;
     }
 
+    std::string filename = "/home/gleefe/D3Feat.pytorch/test_pcd.pcd";
 
+    
+    // std::shared_ptr<open3d::geomtery::PointCloud> test_ply = std::make_shared<open3d::geometry::PointCloud>();
+    
+    
+    std::vector<cv::Point3f> object_points;
+    // auto test_ply = std::make_shared<open3d::geometry::PointCloud>();
+    // open3d::geometry::PointCloud test_ply;
+    // object_points.reserve(pt_cloud.size());
+    
+    pc2d::read_objectpoint(object_points,filename);
+
+
+    // std::cout<<object_points.size()<<std::endl;
 
 
     int w,h,wui;
@@ -159,15 +177,16 @@ int main(int argc, char **argv)
         // imD = cv::imread(string(argv[3])+"/"+vstrImageFilenamesD[ni],CV_LOAD_IMAGE_UNCHANGED);
         im = cv::imread(string(argv[3])+"/"+vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
-
+        // std::cout<<"imread"<<std::endl;
         if(im.empty())
         {
             cerr << endl << "Failed to load image at: "
                  << string(argv[3]) << "/" << vstrImageFilenames[ni] << endl;
             return 1;
         }
-
+        // std::cout<<"Tcw"<<std::endl;
         cv::Mat Tcw = SLAM.TrackMonocular(im,tframe);
+        // std::cout<<"Tcw"<<std::endl;
             int state = SLAM.GetTrackingState();
             vector<ORB_SLAM2::MapPoint*> vMPs = SLAM.GetTrackedMapPoints();
             vector<cv::KeyPoint> vKeys = SLAM.GetTrackedKeyPointsUn();
@@ -185,10 +204,16 @@ int main(int argc, char **argv)
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
 #endif
-
+        // std::cout<<"trackmonocular"<<std::endl;
         // SLAM.TrackRGBD(imRGB,imD,tframe);
-        SLAM.TrackMonocular(im,tframe);
+        // SLAM.TrackMonocular(im,tframe);
         
+        // std::cout<<"depth image"<<std::endl;
+        cv::Mat depth_image = pc2d::depth_image(object_points,Tcw,K);
+
+        cv::imshow("vis", depth_image);
+        cv::waitKey(10);
+
         {
             // GetImagePose(im,Tcw,status,vKeys,vMPs);
 
@@ -196,7 +221,7 @@ int main(int argc, char **argv)
             glColor3f(1.0,1.0,1.0);
 
 
-            cout<<"current cube number: "<<vpPlane.size()<<endl;
+            // cout<<"current cube number: "<<vpPlane.size()<<endl;
 
             if(menu_drawpoints)
                 DrawTrackedPoints(vKeys,vMPs,im);
