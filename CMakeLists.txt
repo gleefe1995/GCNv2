@@ -9,6 +9,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native")
 set(CMAKE_CXX_STANDARD 14) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#open3d
+option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
+if(STATIC_WINDOWS_RUNTIME)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
+
+
+
+
+
+
 #Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -35,8 +49,12 @@ if(NOT OpenCV_FOUND)
    endif()
 endif()
 
+find_package(Open3D REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
+find_package(PCL REQUIRED)
+
+add_definitions(${PCL_DEFINITIONS})
 
 if( TORCH_PATH ) 
    message("TORCH_PATH set to: ${TORCH_PATH}")
@@ -57,6 +75,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${EIGEN3_INCLUDE_DIR}
   ${Pangolin_INCLUDE_DIRS}
+  ${Open3D_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -108,5 +128,10 @@ set_property(TARGET rgbd_gcn PROPERTY CXX_STANDARD 14)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/GCN2)
 add_executable(rgbd_gcn_ar GCN2/gcn_ar.cc)
-target_link_libraries(rgbd_gcn_ar ${PROJECT_NAME} ${TORCH_LIBRARIES})
+target_link_libraries(rgbd_gcn_ar ${PROJECT_NAME} ${TORCH_LIBRARIES} ${PCL_LIBRARIES})
 set_property(TARGET rgbd_gcn_ar PROPERTY CXX_STANDARD 14)
+
+add_executable(open3d GCN2/vis.cpp)
+target_link_libraries(open3d ${PROJECT_NAME} ${TORCH_LIBRARIES} Open3D::Open3D)
+set_property(TARGET open3d PROPERTY CXX_STANDARD 14)
+
