@@ -55,56 +55,45 @@ void read_objectpoint(std::vector<cv::Point3f> &object_points,std::string &filen
 }
 
 
-// void filter(cv::Mat img, cv::Mat& dst, cv::Mat mask)		// ȸ�� ���� �Լ�
-// {
-// 	dst = cv::Mat(img.size(), CV_32F, cv::Scalar(0));			// ȸ�� ��� ���� ���
-// 	cv::Point h_m = mask.size() / 2;							// ����ũ �߽� ��ǥ	
+void filter(cv::Mat img, cv::Mat& dst, int mask_size)		// ȸ�� ���� �Լ�
+{
+				// ȸ�� ��� ���� ���
+	cv::Point h_m = cv::Point( int(mask_size/2),int(mask_size/2));							// ����ũ �߽� ��ǥ	
 
-// 	for (int i = h_m.y; i < img.rows - h_m.y; i++) {		// �Է� ��� �ݺ� ��ȸ
-// 		for (int j = h_m.x; j < img.cols - h_m.x; j++)
-// 		{
-// 			float sum = 0;
-// 			for (int u = 0; u < mask.rows; u++) {	// ����ũ ���� ��ȸ
-// 				for (int v = 0; v < mask.cols; v++)
-// 				{
-// 					int y = i + u - h_m.y;
-// 					int x = j + v - h_m.x;
-// 					sum += mask.at<float>(u, v) * img.at<uchar>(y, x);	// ȸ�� ����
-// 				}
-// 			}
-// 			dst.at<float>(i, j) = sum;				// ȸ�� ������ ���ȭ�� ����
-// 		}
-// 	}
-// }
+	for (int i = h_m.y; i < img.rows - h_m.y; i++) {		// �Է� ��� �ݺ� ��ȸ
+		for (int j = h_m.x; j < img.cols - h_m.x; j++)
+		{
+			double min = 1000;
+			for (int u = 0; u < mask_size; u++) {	// ����ũ ���� ��ȸ
+				for (int v = 0; v < mask_size; v++)
+				{
+                    int y = i + u - h_m.y;
+                    int x = j + v - h_m.x;
 
-
-
-
-
-
-
+                    double value = img.at<double>(y, x);
+                    if ( (value<min) && (value!=0))
+                        min = value;
+                    	
+				}
+			}
+            if (min==1000) min=0;
+			dst.at<double>(i, j) = min;				// ȸ�� ������ ���ȭ�� ����
+		}
+	}
+}
 
 
 
 
-cv::Mat depth_image(std::vector<cv::Point3f> &object_points,cv::Mat &Tcw, cv::Mat &K){
-    // std::cout<<"Hello open3D"<<std::endl;
+
+
+
+
+
+
+
+cv::Mat depth_image(std::vector<cv::Point3f> &object_points,cv::Mat &depth_value,cv::Mat &Tcw, cv::Mat &K){
     
-    // std::string filename = "/home/gleefe/D3Feat.pytorch/test_ply.ply";
-
-    // auto test_ply = std::make_shared<open3d::geometry::PointCloud>();
-    
-    // // std::cout<<test_ply->points_.size()<<std::endl;
-    // // Eigen::Vector3d pt_cloud;
-    // std::vector<Eigen::Vector3d> pt_cloud;
-    
-    
-    // // open3d::geometry::PointCloud test_ply;
-    
-    // open3d::io::ReadPointCloud(filename, *test_ply);
-    // pt_cloud = test_ply->points_;
-    // std::cout<<pt_cloud.size()<<std::endl;
-    // open3d::visualization::DrawGeometries({test_ply}, "window");
 
     cv::Mat rot_mat = cv::Mat::eye(3, 3, CV_64FC1);
 
@@ -195,19 +184,22 @@ cv::Mat depth_image(std::vector<cv::Point3f> &object_points,cv::Mat &Tcw, cv::Ma
         
         
     }
+    cv::Mat depth_value_mat_dst = cv::Mat::zeros(480,640,CV_64FC1);
 
+    filter(depth_value_mat, depth_value_mat_dst, 11 );
     // cv::medianBlur(depth_value_mat,depth_value_mat,25);
     
-    for (int i=0;i<depth_value_mat.rows;i++){
-        for (int j=0;j<depth_value_mat.cols;j++){
-            if ((depth_value_mat.at<double>(i,j)<4)&&(depth_value_mat.at<double>(i,j)!=0)){
-                int hsv_color = int( (depth_value_mat.at<double>(i,j)*30));
+    for (int i=0;i<depth_value_mat_dst.rows;i++){
+        for (int j=0;j<depth_value_mat_dst.cols;j++){
+            if ((depth_value_mat_dst.at<double>(i,j)<4)&&(depth_value_mat_dst.at<double>(i,j)!=0)){
+                int hsv_color = int( (depth_value_mat_dst.at<double>(i,j)*30));
                 cv::circle(image,cv::Point2i(j,i),1,cv::Scalar(hsv_color,255,255),1);
             }
         }
     }
+    depth_value = depth_value_mat_dst.clone();
     // cv::resize(image,image,cv::Size(320,240),CV_INTER_CUBIC);
-    cv::medianBlur(image,image,25);
+    // cv::medianBlur(image,image,25);
     cv::cvtColor(image,image,cv::COLOR_HSV2BGR);
     
     
@@ -223,4 +215,67 @@ cv::Mat depth_image(std::vector<cv::Point3f> &object_points,cv::Mat &Tcw, cv::Ma
 }
     
 
+bool occlusion_ar(cv::Mat depth_value,cv::Mat origin,
+                                    cv::Mat &Tcw, cv::Mat &K){
+    
+    cv::Mat rot_mat = cv::Mat::eye(3, 3, CV_64FC1);
+
+    // std::cout<<Tcw.size()<<std::endl;
+
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            rot_mat.at<double>(i,j) = double(Tcw.at<float>(i,j));
+        }
+    }
+
+    cv::Mat rvec;
+    cv::Rodrigues(rot_mat,rvec);
+    cv::Mat tvec = cv::Mat::zeros(3,1,CV_64FC1);
+    for (int i=0;i<3;i++){
+        tvec.at<double>(i,0) = double(Tcw.at<float>(i,3));
+    }
+    
+    cv::Mat R_solve_inv;
+    cv::Mat t_solve_f;
+
+    R_solve_inv = rot_mat.t();
+    t_solve_f = -R_solve_inv*tvec;
+
+
+
+
+
+        
+        {
+            std::vector<cv::Point3f> origin_points;
+            origin_points.push_back(cv::Point3f(origin.at<float>(0,0),origin.at<float>(1,0),origin.at<float>(2,0)));
+
+            double x_diff = t_solve_f.at<double>(0) - double(origin_points[0].x);
+            double y_diff = t_solve_f.at<double>(1) - double(origin_points[0].y);
+            double z_diff = t_solve_f.at<double>(2) - double(origin_points[0].z);
+
+            double dist = sqrt( x_diff*x_diff + y_diff*y_diff + z_diff*z_diff);
+
+
+            std::vector<cv::Point2f> origin_output;
+            
+            cv::projectPoints(origin_points,rvec,tvec,K,cv::noArray(),origin_output);
+            
+            cv::Point origin_point_2f = cv::Point(int(origin_output[0].x),int(origin_output[0].y)); 
+
+            if (dist<depth_value.at<double>(origin_point_2f.y,origin_point_2f.x)) return true;
+            else return false;
+
+
+        }
+        
+
+    
 }
+
+    
+}
+
+
+
+

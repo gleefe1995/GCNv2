@@ -209,10 +209,11 @@ int main(int argc, char **argv)
         // SLAM.TrackMonocular(im,tframe);
         
         // std::cout<<"depth image"<<std::endl;
-        cv::Mat depth_image = pc2d::depth_image(object_points,Tcw,K);
-
+        cv::Mat depth_value;
+        cv::Mat depth_image = pc2d::depth_image(object_points,depth_value,Tcw,K);
         cv::imshow("vis", depth_image);
         cv::waitKey(10);
+        
 
         {
             // GetImagePose(im,Tcw,status,vKeys,vMPs);
@@ -316,7 +317,15 @@ int main(int argc, char **argv)
                         // Draw cube
                         if(menu_drawcube)
                         {
-                            viewerAR.DrawCube(menu_cubesize);
+                            // std::cout<<pPlane->mTcw.size()<<std::endl;
+                            // std::cout<<pPlane->XC<<std::endl;
+                            // cv::Mat loc_plane = pPlane->XC;
+                            // std::cout<<loc_plane.at<float>(0,0)<<", "<<loc_plane.at<float>(0,1)<<", "<<loc_plane.at<float>(0,2); 
+                            // std::vector<ORB_SLAM2::MapPoint*> plane_points = pPlane->mvMPs;
+                            cv::Mat origin = pPlane->o;
+                            // std::cout<<plane_points.size()<<std::endl;
+                            if (pc2d::occlusion_ar(depth_value,origin,Tcw,K))
+                                viewerAR.DrawCube(menu_cubesize);
                         }
 
                         // Draw grid plane
@@ -330,6 +339,7 @@ int main(int argc, char **argv)
                 }
             }
 
+            
 
 
             pangolin::FinishFrame();
