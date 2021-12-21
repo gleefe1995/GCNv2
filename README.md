@@ -8,7 +8,7 @@ Online running performance with ORB and GCNv2 features:
 
 GCNv2 tum:
 
-![](tum.gif)
+![](ezgif.com-gif-maker.gif)
 
 ## Related Publications
 
@@ -59,8 +59,10 @@ git clone https://github.com/jiexiong2016/GCNv2_SLAM.git
 ```
 Then build the project 
 ```
-cd GCNv2_SLAM
+cd GCNv2_SLAM/GCN2
 ./build.sh
+
+FULL_RESOLUTION=1 GCN_PATH=gcn2_640x480.pt ./rgbd_gcn_ar ../Vocabulary/GCNvoc.bin /path/to/settings /path/to/dataset
 ```
 Make sure to edit `build.sh` pointing to your local libtorch installation. Edit `run.sh` to check out how to run with GCNv2 or vanilla ORB. Check the `Network.md` for the network structure and [link](https://drive.google.com/file/d/1MJMroL5-tl0b9__-OiCfxFP9K6X8kvTT/view) for trained models.
 

@@ -48,7 +48,7 @@ void LoadImages(const string &strFile, vector<string> &vstrImageFilenames,
 
 void LoadCameraPose(const cv::Mat &Tcw);
 
-void DrawCube(const float &size,const float x, const float y, const float z);
+// void DrawCube(const float &size,const float x, const float y, const float z);
 
 void DrawTrackedPoints(const std::vector<cv::KeyPoint> &vKeys, const std::vector<ORB_SLAM2::MapPoint *> &vMPs, cv::Mat &im);
 
@@ -75,9 +75,10 @@ int main(int argc, char **argv)
     im2 = cv::imread(string(argv[3])+"/"+vstrImageFilenames[0],CV_LOAD_IMAGE_UNCHANGED);
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
+    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,false);
 
     
+
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
     vTimesTrack.resize(nImages);
@@ -91,12 +92,14 @@ int main(int argc, char **argv)
     cv::FileStorage fSettings(argv[2], cv::FileStorage::READ);
     bRGB = static_cast<bool>((int)fSettings["Camera.RGB"]);
     float fps = fSettings["Camera.fps"];
-    // viewerAR.SetFPS(fps);
+    
 
     float fx = fSettings["Camera.fx"];
     float fy = fSettings["Camera.fy"];
     float cx = fSettings["Camera.cx"];
     float cy = fSettings["Camera.cy"];
+
+    
 
     K = cv::Mat::eye(3,3,CV_32F);
     K.at<float>(0,0) = fx;
@@ -116,23 +119,13 @@ int main(int argc, char **argv)
         DistCoef.at<float>(4) = k3;
     }
 
+    // read point cloud file
+    // change path to point cloud file
     std::string filename = "/home/gleefe/D3Feat.pytorch/test_pcd.pcd";
-
-    
-    // std::shared_ptr<open3d::geomtery::PointCloud> test_ply = std::make_shared<open3d::geometry::PointCloud>();
-    
-    
     std::vector<cv::Point3f> object_points;
-    // auto test_ply = std::make_shared<open3d::geometry::PointCloud>();
-    // open3d::geometry::PointCloud test_ply;
-    // object_points.reserve(pt_cloud.size());
-    
     pc2d::read_objectpoint(object_points,filename);
 
-
-    // std::cout<<object_points.size()<<std::endl;
-
-
+    // For AR viewer
     int w,h,wui;
     w = im2.cols;
     h = im2.rows;
@@ -164,17 +157,15 @@ int main(int argc, char **argv)
     pangolin::GlTexture imageTexture(w,h,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
 
     pangolin::OpenGlMatrixSpec P = pangolin::ProjectionMatrixRDF_TopLeft(w,h,fx,fy,cx,cy,0.001,1000);
-
+    
     vector<ORB_SLAM2::Plane*> vpPlane;
-
-
+    
+    
     // Main loop
     cv::Mat im;
     for(int ni=0; ni<nImages; ni++)
     {
         // Read image and depthmap from file
-        // imRGB = cv::imread(string(argv[3])+"/"+vstrImageFilenamesRGB[ni],CV_LOAD_IMAGE_UNCHANGED);
-        // imD = cv::imread(string(argv[3])+"/"+vstrImageFilenamesD[ni],CV_LOAD_IMAGE_UNCHANGED);
         im = cv::imread(string(argv[3])+"/"+vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
         // std::cout<<"imread"<<std::endl;
@@ -184,20 +175,13 @@ int main(int argc, char **argv)
                  << string(argv[3]) << "/" << vstrImageFilenames[ni] << endl;
             return 1;
         }
-        // std::cout<<"Tcw"<<std::endl;
+        
         cv::Mat Tcw = SLAM.TrackMonocular(im,tframe);
         // std::cout<<"Tcw"<<std::endl;
-            int state = SLAM.GetTrackingState();
-            vector<ORB_SLAM2::MapPoint*> vMPs = SLAM.GetTrackedMapPoints();
-            vector<cv::KeyPoint> vKeys = SLAM.GetTrackedKeyPointsUn();
-
-        // if(imRGB.empty())
-        // {
-        //     cerr << endl << "Failed to load image at: "
-        //          << string(argv[3]) << "/" << vstrImageFilenamesRGB[ni] << endl;
-        //     return 1;
-        // }
-
+        int state = SLAM.GetTrackingState();
+        vector<ORB_SLAM2::MapPoint*> vMPs = SLAM.GetTrackedMapPoints();
+        vector<cv::KeyPoint> vKeys = SLAM.GetTrackedKeyPointsUn();
+        
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
@@ -211,18 +195,18 @@ int main(int argc, char **argv)
         // std::cout<<"depth image"<<std::endl;
         cv::Mat depth_value;
         cv::Mat depth_image = pc2d::depth_image(object_points,depth_value,Tcw,K);
-        cv::imshow("vis", depth_image);
-        cv::waitKey(10);
+        
         
 
-        {
-            // GetImagePose(im,Tcw,status,vKeys,vMPs);
+        
 
+        
+        
+        {
+            
             d_image.Activate();
             glColor3f(1.0,1.0,1.0);
 
-
-            // cout<<"current cube number: "<<vpPlane.size()<<endl;
 
             if(menu_drawpoints)
                 DrawTrackedPoints(vKeys,vMPs,im);
@@ -243,11 +227,6 @@ int main(int argc, char **argv)
             
             // Load camera pose
             LoadCameraPose(Tcw);
-
-
-
-            // viewerAR.DrawPlane(menu_ngrid,menu_sizegrid);
-
 
             if(menu_clear)
             {
@@ -284,14 +263,7 @@ int main(int argc, char **argv)
                 // Recompute plane if there has been a loop closure or global BA
                 // In localization mode, map is not updated so we do not need to recompute
                 bool bRecompute = false;
-                // if(!bLocalizationMode)
-                // {
-                //     if(mpSystem->MapChanged())
-                //     {
-                //         cout << "Map changed. All virtual elements are recomputed!" << endl;
-                //         bRecompute = true;
-                //     }
-                // }
+                
 
                 if(SLAM.MapChanged())
                     {
@@ -317,15 +289,9 @@ int main(int argc, char **argv)
                         // Draw cube
                         if(menu_drawcube)
                         {
-                            // std::cout<<pPlane->mTcw.size()<<std::endl;
-                            // std::cout<<pPlane->XC<<std::endl;
-                            // cv::Mat loc_plane = pPlane->XC;
-                            // std::cout<<loc_plane.at<float>(0,0)<<", "<<loc_plane.at<float>(0,1)<<", "<<loc_plane.at<float>(0,2); 
-                            // std::vector<ORB_SLAM2::MapPoint*> plane_points = pPlane->mvMPs;
                             cv::Mat origin = pPlane->o;
-                            // std::cout<<plane_points.size()<<std::endl;
-                            if (pc2d::occlusion_ar(depth_value,origin,Tcw,K))
-                                viewerAR.DrawCube(menu_cubesize);
+                            
+                            viewerAR.DrawCube(depth_image,depth_value,Tcw,K ,pPlane->Tpw,menu_cubesize);
                         }
 
                         // Draw grid plane
@@ -344,6 +310,8 @@ int main(int argc, char **argv)
 
             pangolin::FinishFrame();
         }
+        cv::imshow("vis", depth_image);
+        cv::waitKey(10);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -455,14 +423,14 @@ void LoadCameraPose(const cv::Mat &Tcw)
 
 
 
-void DrawCube(const float &size,const float x, const float y, const float z)
-{
-    pangolin::OpenGlMatrix M = pangolin::OpenGlMatrix::Translate(-x,-size-y,-z);
-    glPushMatrix();
-    M.Multiply();
-    pangolin::glDrawColouredCube(-size,size);
-    glPopMatrix();
-}
+// void DrawCube(const float &size,const float x, const float y, const float z)
+// {
+//     pangolin::OpenGlMatrix M = pangolin::OpenGlMatrix::Translate(-x,-size-y,-z);
+//     glPushMatrix();
+//     M.Multiply();
+//     pangolin::glDrawColouredCube(-size,size);
+//     glPopMatrix();
+// }
 
 
 
